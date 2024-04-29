@@ -1,0 +1,5 @@
+DB_USER = "postgres"
+DB_PASSWORD = "postgres"
+DB_DB = "query_builder"
+DB_PORT = "5433"
+DB_SCHEMA = "olap_backend"
