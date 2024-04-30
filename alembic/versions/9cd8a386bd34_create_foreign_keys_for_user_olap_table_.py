@@ -40,4 +40,8 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     conn = op.get_bind()
-    conn.execute(text("DROP TABLE cwb.log;"))
+    conn.execute(text("""
+        ALTER TABLE cwb.log DROP CONSTRAINT IF EXISTS log_olap_table_fk;
+        ALTER TABLE cwb.log DROP CONSTRAINT IF EXISTS log_user_fk;
+        ALTER TABLE cwb.olap_table DROP CONSTRAINT IF EXISTS olap_table_database_type_fk;
+    """))
