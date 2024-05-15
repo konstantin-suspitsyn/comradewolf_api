@@ -38,6 +38,7 @@ def upgrade() -> None:
             "comment" text NULL,
             created_at timestamp NOT NULL,
             updated_at timestamp NULL,
+            max_connections int2 NOT NULL,
             CONSTRAINT olap_connection_pk PRIMARY KEY (id)
         );
 
