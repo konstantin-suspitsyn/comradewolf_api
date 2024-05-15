@@ -22,7 +22,7 @@ class OlapUser(SQLModel, table=True):
     email: str
 
 
-class OlapUserFromToken(SQLModel, table=False):
+class OlapUserDTO(BaseModel):
     id: int
     username: str
 

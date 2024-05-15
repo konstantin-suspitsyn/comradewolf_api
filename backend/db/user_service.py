@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from backend.api.pydantic.token_model import TokenData
 from backend.db.database import database
 
-from backend.api.pydantic.model_olap import OlapUser
+from backend.api.pydantic.model_olap import OlapUser, OlapUserDTO
 from settings import SECRET_KEY, ALGORITHM
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -40,6 +40,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 async def get_user_by_name(username: str) -> OlapUser:
     result = await database.fetch_one(sql_get_user.format(username))
     user = OlapUser(id=result["id"], username=result["username"], email=result["email"], password=result["password"])
+    return user
+
+
+async def get_user_dto_by_name(username: str) -> OlapUserDTO:
+    result = await database.fetch_one(sql_get_user.format(username))
+    user = OlapUserDTO(id=result["id"], username=result["username"])
     return user
 
 
@@ -89,7 +95,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credential_exception
 
-    user = await get_user_by_name(username=token_data.username)
+    user = await get_user_dto_by_name(username=token_data.username)
     if user is None:
         raise credential_exception
 
@@ -100,5 +106,5 @@ def create_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-async def get_current_active_user(current_user: OlapUser = Depends(get_current_user)):
+async def get_current_active_user(current_user: OlapUserDTO = Depends(get_current_user)):
     return current_user

@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette import status
 
-from backend.api.pydantic.model_olap import OlapUser
+from backend.api.pydantic.model_olap import OlapUser, OlapUserDTO
 from backend.api.pydantic.token_model import Token
 from backend.db.database import database
 from backend.db.olap_service import get_frontend_fields, get_list_of_olap_tables
@@ -24,15 +24,15 @@ async def shutdown():
     await database.disconnect()
 
 
-@app.get("/olap/{olap_name}")
-async def get_olap_info(olap_name):
-    response = await get_frontend_fields(olap_name)
+@app.get("/olap/my_tables")
+async def get_my_tables(current_user: OlapUserDTO = Depends(get_current_active_user)):
+    response = await get_list_of_olap_tables(current_user)
     return response
 
 
-@app.get("/olap/my_tables")
-async def get_my_tables():
-    response = await get_list_of_olap_tables()
+@app.get("/olap/table/{olap_name}")
+async def get_olap_info(olap_name, current_user: OlapUserDTO = Depends(get_current_active_user)):
+    response = await get_frontend_fields(olap_name, current_user)
     return response
 
 
@@ -53,11 +53,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.get("/users/me/", response_model=OlapUser)
-async def read_users_me(current_user: OlapUser = Depends(get_current_active_user)):
+@app.get("/users/me/", response_model=OlapUserDTO)
+async def read_users_me(current_user: OlapUserDTO = Depends(get_current_active_user)):
     return current_user
-
-
-@app.get("/users/me/items")
-async def read_own_items(current_user: OlapUser = Depends(get_current_active_user)):
-    return [{"item_id": 1, "owner": current_user}]

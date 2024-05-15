@@ -1,18 +1,16 @@
 from comradewolf.universe.olap_structure_generator import OlapStructureGenerator
-from fastapi import Depends
 
-from backend.api.pydantic.model_olap import OlapUser, OlapTableResponse, OlapToml, OlapUserFromToken
+from backend.api.pydantic.model_olap import OlapTableResponse, OlapToml, OlapUserDTO
 from backend.core_structure import CoreContainer, OlapDbSettings
 from backend.db.database import database
-from backend.db.user_service import get_current_active_user
 
 sql_permitted_olap_tables = """
     select 
         ot."name", ot.id
-    from cwb.user_pesmission up 
+    from cwb.user_permission up 
     inner join cwb.olap_table ot 
         on up.olap_id = ot.id 
-    where up.id = {};
+    where up.user_id = {};
 """
 
 sql_is_table_in_user = """
@@ -62,7 +60,7 @@ sql_olap_info = """
     """
 
 
-async def get_list_of_olap_tables(current_user: OlapUserFromToken = Depends(get_current_active_user)) -> list[OlapTableResponse]:
+async def get_list_of_olap_tables(current_user: OlapUserDTO) -> list[OlapTableResponse]:
     olap_tables = list()
 
     all_tables = await database.fetch_all(sql_permitted_olap_tables.format(current_user.id))
@@ -73,7 +71,8 @@ async def get_list_of_olap_tables(current_user: OlapUserFromToken = Depends(get_
     return olap_tables
 
 
-async def get_frontend_fields(olap_table_name: str, current_user: OlapUserFromToken = Depends(get_current_active_user)):
+async def get_frontend_fields(olap_table_name: str, current_user: OlapUserDTO):
+
     is_table_allowed = await database.fetch_one(sql_is_table_in_user.format(current_user.id, olap_table_name))
 
     if is_table_allowed["count_tables"] == 0:
